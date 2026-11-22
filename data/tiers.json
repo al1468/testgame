@@ -1,0 +1,367 @@
+{
+  "runsPerCompanion": 60,
+  "cuts": {
+    "S": 0.4,
+    "A": 0.16,
+    "B": 0.1
+  },
+  "companions": [
+    {
+      "id": "paramedic",
+      "name": "성녀",
+      "tier": "S",
+      "clearRate": 0.833,
+      "avgFloors": 9.7
+    },
+    {
+      "id": "doctor",
+      "name": "서리 치유사",
+      "tier": "S",
+      "clearRate": 0.617,
+      "avgFloors": 9.2
+    },
+    {
+      "id": "priest",
+      "name": "대사제",
+      "tier": "S",
+      "clearRate": 0.6,
+      "avgFloors": 9.6
+    },
+    {
+      "id": "bodyguard",
+      "name": "방패 수호자",
+      "tier": "S",
+      "clearRate": 0.517,
+      "avgFloors": 8.5
+    },
+    {
+      "id": "rogue",
+      "name": "도적",
+      "tier": "A",
+      "clearRate": 0.333,
+      "avgFloors": 7.7
+    },
+    {
+      "id": "chef",
+      "name": "화로의 무녀",
+      "tier": "A",
+      "clearRate": 0.267,
+      "avgFloors": 8.5
+    },
+    {
+      "id": "mountaineer",
+      "name": "드루이드",
+      "tier": "A",
+      "clearRate": 0.2,
+      "avgFloors": 7.7
+    },
+    {
+      "id": "dragonblood",
+      "name": "용혈 전사",
+      "tier": "A",
+      "clearRate": 0.183,
+      "avgFloors": 7.5
+    },
+    {
+      "id": "loan_shark",
+      "name": "탐욕의 악마",
+      "tier": "A",
+      "clearRate": 0.183,
+      "avgFloors": 6.7
+    },
+    {
+      "id": "mage",
+      "name": "마법사",
+      "tier": "A",
+      "clearRate": 0.183,
+      "avgFloors": 6.6
+    },
+    {
+      "id": "knight",
+      "name": "기사",
+      "tier": "A",
+      "clearRate": 0.167,
+      "avgFloors": 6.6
+    },
+    {
+      "id": "detective",
+      "name": "현상금 사냥꾼",
+      "tier": "A",
+      "clearRate": 0.167,
+      "avgFloors": 6.2
+    },
+    {
+      "id": "hexer",
+      "name": "흑마법사",
+      "tier": "A",
+      "clearRate": 0.167,
+      "avgFloors": 5.6
+    },
+    {
+      "id": "hacker",
+      "name": "룬 세공사",
+      "tier": "A",
+      "clearRate": 0.167,
+      "avgFloors": 5.3
+    },
+    {
+      "id": "sun_apostle",
+      "name": "태양의 사도",
+      "tier": "B",
+      "clearRate": 0.15,
+      "avgFloors": 7.6
+    },
+    {
+      "id": "desert_blade",
+      "name": "사막의 검객",
+      "tier": "B",
+      "clearRate": 0.15,
+      "avgFloors": 6.3
+    },
+    {
+      "id": "shaman",
+      "name": "주술사",
+      "tier": "B",
+      "clearRate": 0.15,
+      "avgFloors": 6.3
+    },
+    {
+      "id": "golem_master",
+      "name": "골렘술사",
+      "tier": "B",
+      "clearRate": 0.15,
+      "avgFloors": 5.9
+    },
+    {
+      "id": "scales_of_judgment",
+      "name": "심판의 천칭",
+      "tier": "B",
+      "clearRate": 0.15,
+      "avgFloors": 5.5
+    },
+    {
+      "id": "necromancer",
+      "name": "강령술사",
+      "tier": "B",
+      "clearRate": 0.133,
+      "avgFloors": 7.2
+    },
+    {
+      "id": "assassin",
+      "name": "그림자 암살자",
+      "tier": "B",
+      "clearRate": 0.133,
+      "avgFloors": 6.9
+    },
+    {
+      "id": "excavator",
+      "name": "바위 거인",
+      "tier": "B",
+      "clearRate": 0.133,
+      "avgFloors": 6.5
+    },
+    {
+      "id": "info_broker",
+      "name": "밤의 첩자",
+      "tier": "B",
+      "clearRate": 0.133,
+      "avgFloors": 6.5
+    },
+    {
+      "id": "fixer",
+      "name": "용병단장",
+      "tier": "B",
+      "clearRate": 0.117,
+      "avgFloors": 5.9
+    },
+    {
+      "id": "glacier_queen",
+      "name": "빙하의 여왕",
+      "tier": "B",
+      "clearRate": 0.117,
+      "avgFloors": 5.8
+    },
+    {
+      "id": "idol",
+      "name": "빛의 무희",
+      "tier": "B",
+      "clearRate": 0.117,
+      "avgFloors": 5.6
+    },
+    {
+      "id": "archaeologist",
+      "name": "시간술사",
+      "tier": "B",
+      "clearRate": 0.117,
+      "avgFloors": 4.4
+    },
+    {
+      "id": "figure_skater",
+      "name": "빙결 검무사",
+      "tier": "B",
+      "clearRate": 0.1,
+      "avgFloors": 6.6
+    },
+    {
+      "id": "mercenary",
+      "name": "광전사",
+      "tier": "B",
+      "clearRate": 0.1,
+      "avgFloors": 6.1
+    },
+    {
+      "id": "goalie",
+      "name": "빙벽 수문장",
+      "tier": "B",
+      "clearRate": 0.1,
+      "avgFloors": 5.6
+    },
+    {
+      "id": "lawyer",
+      "name": "이단심문관",
+      "tier": "B",
+      "clearRate": 0.1,
+      "avgFloors": 5.5
+    },
+    {
+      "id": "bard",
+      "name": "바람의 음유시인",
+      "tier": "C",
+      "clearRate": 0.083,
+      "avgFloors": 6.3
+    },
+    {
+      "id": "weather_caster",
+      "name": "눈보라 마법사",
+      "tier": "C",
+      "clearRate": 0.083,
+      "avgFloors": 6.1
+    },
+    {
+      "id": "sniper",
+      "name": "엘프 궁수",
+      "tier": "C",
+      "clearRate": 0.083,
+      "avgFloors": 6
+    },
+    {
+      "id": "demolitionist",
+      "name": "운석 마법사",
+      "tier": "C",
+      "clearRate": 0.083,
+      "avgFloors": 5.9
+    },
+    {
+      "id": "vampire",
+      "name": "흡혈 귀족",
+      "tier": "C",
+      "clearRate": 0.083,
+      "avgFloors": 5.8
+    },
+    {
+      "id": "streamer",
+      "name": "빛의 전령",
+      "tier": "C",
+      "clearRate": 0.083,
+      "avgFloors": 5.4
+    },
+    {
+      "id": "ember_witch",
+      "name": "잿불의 마녀",
+      "tier": "C",
+      "clearRate": 0.083,
+      "avgFloors": 5.3
+    },
+    {
+      "id": "coroner",
+      "name": "서리 심문관",
+      "tier": "C",
+      "clearRate": 0.083,
+      "avgFloors": 5.1
+    },
+    {
+      "id": "exorcist",
+      "name": "성기사",
+      "tier": "C",
+      "clearRate": 0.083,
+      "avgFloors": 4.9
+    },
+    {
+      "id": "frost_wolf_rider",
+      "name": "서리늑대 기수",
+      "tier": "C",
+      "clearRate": 0.067,
+      "avgFloors": 6.5
+    },
+    {
+      "id": "gunslinger",
+      "name": "마탄의 사수",
+      "tier": "C",
+      "clearRate": 0.067,
+      "avgFloors": 5.8
+    },
+    {
+      "id": "brawler",
+      "name": "수도승",
+      "tier": "C",
+      "clearRate": 0.067,
+      "avgFloors": 5.3
+    },
+    {
+      "id": "dream_witch",
+      "name": "악몽의 마녀",
+      "tier": "C",
+      "clearRate": 0.067,
+      "avgFloors": 5
+    },
+    {
+      "id": "apothecary",
+      "name": "독술사",
+      "tier": "C",
+      "clearRate": 0.05,
+      "avgFloors": 4.2
+    },
+    {
+      "id": "phoenix_knight",
+      "name": "불사조 기사",
+      "tier": "C",
+      "clearRate": 0.033,
+      "avgFloors": 5.6
+    },
+    {
+      "id": "angel_contractor",
+      "name": "천사 계약자",
+      "tier": "C",
+      "clearRate": 0.033,
+      "avgFloors": 5.2
+    },
+    {
+      "id": "abyss_lord",
+      "name": "나락의 기사",
+      "tier": "C",
+      "clearRate": 0.033,
+      "avgFloors": 4.3
+    },
+    {
+      "id": "pyromancer",
+      "name": "홍염의 마녀",
+      "tier": "C",
+      "clearRate": 0.017,
+      "avgFloors": 4.9
+    },
+    {
+      "id": "warrior",
+      "name": "전사",
+      "tier": "C",
+      "clearRate": 0.017,
+      "avgFloors": 4.7
+    },
+    {
+      "id": "firefighter",
+      "name": "화염 파수꾼",
+      "tier": "C",
+      "clearRate": 0.017,
+      "avgFloors": 4.1
+    }
+  ]
+}

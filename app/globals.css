@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  --animate-float: float 1s ease-out forwards;
+  --animate-hit: hit 0.3s ease-in-out;
+  --animate-reveal: reveal 0.6s ease-out both;
+  --animate-shine: shine 2s ease-in-out infinite;
+}
+
+/* 소환 카드 공개 */
+@keyframes reveal {
+  0% {
+    opacity: 0;
+    transform: perspective(600px) rotateY(90deg) scale(0.9);
+  }
+  60% {
+    opacity: 1;
+    transform: perspective(600px) rotateY(-8deg) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* S랭크·소환 버튼 반짝임 */
+@keyframes shine {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.25);
+  }
+}
+
+@keyframes float {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-28px) scale(1);
+  }
+}
+
+@keyframes hit {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+body {
+  background:
+    radial-gradient(ellipse at top, rgba(34, 211, 238, 0.08), transparent 60%),
+    #020617;
+  color: #e2e8f0;
+  font-family: var(--font-sans);
+}
+
+@layer components {
+  /* 웹소설 "상태창" 느낌의 패널 */
+  .system-panel {
+    @apply rounded-lg border border-cyan-500/30 bg-slate-950/80 shadow-[inset_0_0_24px_rgba(34,211,238,0.06)];
+  }
+  .btn {
+    @apply rounded-md border border-cyan-400/60 bg-cyan-500/20 px-4 py-2.5 font-semibold text-cyan-50 transition hover:bg-cyan-500/35 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .btn-ghost {
+    @apply border-slate-600 bg-transparent text-slate-200 hover:bg-slate-800;
+  }
+  .btn-sm {
+    @apply rounded border border-slate-600 bg-slate-800 px-2.5 py-1 text-xs text-slate-200 transition hover:border-slate-400;
+  }
+  .btn-on {
+    @apply border-cyan-400 bg-cyan-600/40 text-cyan-50;
+  }
+}
