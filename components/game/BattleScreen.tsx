@@ -19,6 +19,7 @@ import { getFloor, MAX_FLOOR } from "@/data/floors";
 import * as Run from "@/lib/engine/run";
 import { describePassive, ELEMENT_BG, elementLabel } from "@/lib/ui/labels";
 import { UnitCard } from "./UnitCard";
+import { SubmitRunPanel } from "./Cloud";
 
 function expectedDamage(actor: BattleUnit, target: BattleUnit, skill: SkillDef): string | null {
   let total = 0;
@@ -336,6 +337,7 @@ function ResultOverlay({ battle }: { battle: BattleState }) {
             </div>
           </dl>
         )}
+        {(cleared || failed) && <SubmitRunPanel />}
 
         <div className="mt-5 flex flex-col gap-2">
           {!cleared && !failed && (

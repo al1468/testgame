@@ -16,10 +16,20 @@ import { getFloor } from "@/data/floors";
 import * as Run from "@/lib/engine/run";
 import type { BattleReport, RunState } from "@/lib/engine/run";
 import { formatEvent, STATUS_LABEL, type LogLine } from "@/lib/ui/labels";
-import { rollParty, GACHA_RULES } from "@/lib/engine/gacha";
-import { clearSave, clearSummon, loadSave, loadSummon, writeSave, writeSummon, type SummonState } from "./save";
+import { rollParty, runSeedFor, GACHA_RULES } from "@/lib/engine/gacha";
+import type { RunAction } from "@/lib/engine/replay";
+import {
+  clearSave,
+  clearSummon,
+  loadSave,
+  loadSummon,
+  writeSave,
+  writeSummon,
+  type RunMeta,
+  type SummonState,
+} from "./save";
 
-export type Screen = "title" | "summon" | "codex" | "map" | "battle";
+export type Screen = "title" | "summon" | "codex" | "ranking" | "map" | "battle";
 
 export type PopupKind = "damage" | "crit" | "heal" | "dot" | "status" | "resist";
 
@@ -43,6 +53,12 @@ interface GameStore {
   /** 소환할 때마다 1씩 증가 (카드 공개 연출 다시 재생용) */
   summonCount: number;
   run: RunState | null;
+  /** 이 런이 어떤 소환에서 시작됐는지 (랭킹 검증용, 소환 없이 시작하면 null) */
+  runMeta: RunMeta | null;
+  /** 이 런의 행동 기록 (랭킹 검증 시 서버가 재생) */
+  runLog: RunAction[];
+  /** 진행 중인 전투의 아군 행동 */
+  battleLog: Action[];
   /** 방금 끝난 전투 결과 (결과 창 표시용) */
   report: BattleReport | null;
   battle: BattleState | null;
@@ -91,7 +107,8 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const line = (text: string, tone: LogLine["tone"] = "system"): LogEntry => ({ id: nextId++, text, tone });
 
 export const useGame = create<GameStore>()((set, get) => {
-  function applyStep(res: StepResult) {
+  /** 전투 한 걸음 반영. allyAction이 있으면 전투 기록에도 추가 (같은 set에서 저장되도록) */
+  function applyStep(res: StepResult, allyAction?: Action) {
     const lines: LogEntry[] = [];
     const popups: Popup[] = [];
     for (const ev of res.events) {
@@ -111,6 +128,7 @@ export const useGame = create<GameStore>()((set, get) => {
     }
     set((st) => ({
       battle: res.state,
+      battleLog: allyAction ? [...st.battleLog, allyAction] : st.battleLog,
       log: [...st.log, ...lines].slice(-80),
       popups: [...st.popups, ...popups],
     }));
@@ -147,7 +165,9 @@ export const useGame = create<GameStore>()((set, get) => {
       }
       await wait(550);
       if (token !== runToken) return;
-      applyStep(act(get().battle!, chooseAutoAction(get().battle!)));
+      const cur = get().battle!;
+      const autoAction = chooseAutoAction(cur);
+      applyStep(act(cur, autoAction), actor.side === "ally" ? autoAction : undefined);
       await wait(650);
     }
     if (token !== runToken) return;
@@ -160,7 +180,12 @@ export const useGame = create<GameStore>()((set, get) => {
     const { battle, run, report } = get();
     if (!battle || !run || battle.outcome === "ongoing" || report) return;
     const res = Run.finishBattle(run, battle);
-    set({ run: res.run, report: res.report });
+    set((st) => ({
+      run: res.run,
+      report: res.report,
+      runLog: [...st.runLog, { t: "battle", actions: st.battleLog }],
+      battleLog: [],
+    }));
   }
 
   async function perform(action: Action) {
@@ -168,7 +193,7 @@ export const useGame = create<GameStore>()((set, get) => {
     if (!s || get().busy) return;
     const token = runToken;
     set({ busy: true, selectedSkillId: null });
-    applyStep(act(s, action));
+    applyStep(act(s, action), action);
     await delay(650 / get().speed);
     await proceed(token);
   }
@@ -190,16 +215,27 @@ export const useGame = create<GameStore>()((set, get) => {
     }
     const revived = run.members.filter((m) => m.hp <= 0).length;
     if (revived > 0) log.push(line(`[시스템] 쓰러졌던 동료 ${revived}명이 HP 50%로 복귀했습니다.`, "good"));
-    set({ screen: "battle", run, report: null, battle, log, popups: [], selectedSkillId: null });
+    set((st) => ({
+      screen: "battle",
+      run,
+      runLog: [...st.runLog, { t: "node", id: node.id }],
+      battleLog: [],
+      report: null,
+      battle,
+      log,
+      popups: [],
+      selectedSkillId: null,
+    }));
     void proceed(token);
   }
 
   /** 지도 행동 공통 처리 (실패하면 안내 문구) */
-  function runAction(fn: (run: RunState) => RunState) {
+  function runAction(fn: (run: RunState) => RunState, record: RunAction) {
     const { run } = get();
     if (!run) return;
     try {
-      set({ run: fn(run), notice: null });
+      const next = fn(run);
+      set((st) => ({ run: next, runLog: [...st.runLog, record], notice: null }));
     } catch (e) {
       set({ notice: friendlyError(e instanceof Error ? e.message : "") });
     }
@@ -211,6 +247,9 @@ export const useGame = create<GameStore>()((set, get) => {
     summon: null,
     summonCount: 0,
     run: null,
+    runMeta: null,
+    runLog: [],
+    battleLog: [],
     report: null,
     battle: null,
     log: [],
@@ -258,12 +297,21 @@ export const useGame = create<GameStore>()((set, get) => {
     startRun: (partyArg) => {
       const valid = (partyArg ?? get().partyIds).filter((id) => COMPANIONS.some((c) => c.id === id)).slice(0, PARTY_SIZE);
       if (valid.length === 0) return;
-      const seed = `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+      // 소환 결과로 시작하면 런 시드를 소환 시드에서 만든다 → 서버가 소환·런을 함께 검증 가능
+      const summon = get().summon;
+      const fromSummon = !partyArg && summon?.party ? summon : null;
+      const runMeta: RunMeta | null = fromSummon
+        ? { summonSeed: fromSummon.seed, pulls: fromSummon.pulls, party: valid }
+        : null;
+      const seed = fromSummon ? runSeedFor(fromSummon.seed) : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
       runToken++;
       clearSummon();
       set({
         partyIds: valid,
         summon: null,
+        runMeta,
+        runLog: [],
+        battleLog: [],
         run: Run.createRun(seed, valid),
         battle: null,
         report: null,
@@ -282,6 +330,9 @@ export const useGame = create<GameStore>()((set, get) => {
       const inBattle = !!save.battle;
       set({
         partyIds: save.partyIds,
+        runMeta: save.runMeta ?? null,
+        runLog: save.runLog ?? [],
+        battleLog: save.battleLog ?? [],
         run: save.run,
         battle: save.battle,
         report: save.report,
@@ -302,7 +353,7 @@ export const useGame = create<GameStore>()((set, get) => {
     abandonRun: () => {
       runToken++;
       clearSave();
-      set({ run: null, battle: null, report: null, screen: "title", busy: false });
+      set({ run: null, runMeta: null, runLog: [], battleLog: [], battle: null, report: null, screen: "title", busy: false });
     },
 
     selectNode: (nodeId) => {
@@ -311,14 +362,15 @@ export const useGame = create<GameStore>()((set, get) => {
       const next = Run.enterNode(run, nodeId);
       const node = Run.currentNode(next)!;
       if (Run.isBattleNode(node.kind)) startNodeBattle(next);
-      else set({ run: next, notice: null });
+      else set((st) => ({ run: next, runLog: [...st.runLog, { t: "node", id: nodeId }], notice: null }));
     },
-    restHeal: () => runAction(Run.restHeal),
-    restTrain: (i) => runAction((r) => Run.restTrain(r, i)),
-    buyOffer: (i) => runAction((r) => Run.buyOffer(r, i)),
-    recruit: (defId, replaceIndex) => runAction((r) => Run.recruit(r, defId, replaceIndex)),
-    chooseEvent: (i) => runAction((r) => Run.chooseEventOption(r, i)),
-    leaveNode: () => runAction(Run.leaveNode),
+    restHeal: () => runAction(Run.restHeal, { t: "rest_heal" }),
+    restTrain: (i) => runAction((r) => Run.restTrain(r, i), { t: "rest_train", i }),
+    buyOffer: (i) => runAction((r) => Run.buyOffer(r, i), { t: "buy", i }),
+    recruit: (defId, replaceIndex) =>
+      runAction((r) => Run.recruit(r, defId, replaceIndex), { t: "recruit", id: defId, replace: replaceIndex }),
+    chooseEvent: (i) => runAction((r) => Run.chooseEventOption(r, i), { t: "event", i }),
+    leaveNode: () => runAction(Run.leaveNode, { t: "leave" }),
 
     backToMap: () => {
       runToken++;
@@ -375,6 +427,9 @@ if (typeof window !== "undefined") {
     const inBattle = st.screen === "battle";
     writeSave({
       partyIds: st.partyIds,
+      runMeta: st.runMeta,
+      runLog: st.runLog,
+      battleLog: inBattle ? st.battleLog : [],
       run: st.run,
       battle: inBattle ? st.battle : null,
       report: inBattle ? st.report : null,

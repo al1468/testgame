@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { COMPANIONS, PARTY_SIZE } from "@/data/companions";
 import { ENEMIES } from "@/data/enemies";
 import { getTier, TIER_ORDER, TIER_RUNS, TIER_STYLE, type Tier } from "@/data/tiers";
@@ -12,10 +12,16 @@ import { ELEMENT_ICON, elementLabel } from "@/lib/ui/labels";
 import { BattleScreen } from "./BattleScreen";
 import { MapScreen } from "./MapScreen";
 import { UnitInfo } from "./common";
+import { AccountPanel, RankingScreen } from "./Cloud";
+import { initCloud } from "@/lib/supabase/cloud";
 
 export function GameApp() {
   const screen = useGame((s) => s.screen);
+  useEffect(() => {
+    void initCloud();
+  }, []);
   if (screen === "summon") return <SummonScreen />;
+  if (screen === "ranking") return <RankingScreen />;
   if (screen === "codex") return <CodexScreen />;
   if (screen === "map") return <MapScreen />;
   if (screen === "battle") return <BattleScreen />;
@@ -48,10 +54,11 @@ function TitleScreen() {
         <button type="button" className="btn btn-ghost" onClick={() => goTo("codex")}>
           캐릭터 도감
         </button>
-        <button type="button" className="btn btn-ghost" disabled>
-          랭킹 (준비 중)
+        <button type="button" className="btn btn-ghost" onClick={() => goTo("ranking")}>
+          랭킹
         </button>
       </div>
+      <AccountPanel />
     </main>
   );
 }

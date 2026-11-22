@@ -1,5 +1,6 @@
 // 테스트·밸런스용 자동 플레이: 맵 선택부터 전투까지 런을 끝까지 진행한다.
-import { createBattle, simulateBattle } from "@/lib/engine";
+import { act, advance, chooseAutoAction, createBattle, getUnit, type Action } from "@/lib/engine";
+import type { RunAction } from "@/lib/engine/replay";
 import { nextRandom } from "@/lib/engine/rng";
 import {
   buyOffer,
@@ -28,6 +29,12 @@ function hpRatio(run: RunState) {
 }
 
 export function autoplayRun(seed: string, partyIds: string[]): RunState {
+  return autoplayWithLog(seed, partyIds).run;
+}
+
+/** 자동 플레이 + 서버 재생용 행동 기록 */
+export function autoplayWithLog(seed: string, partyIds: string[]): { run: RunState; log: RunAction[] } {
+  const log: RunAction[] = [];
   let run = createRun(seed, partyIds);
   let r = 1;
   const pick = () => {
@@ -38,16 +45,33 @@ export function autoplayRun(seed: string, partyIds: string[]): RunState {
   for (let guard = 0; guard < 500 && run.status === "ongoing"; guard++) {
     const options = reachableNodeIds(run);
     if (options.length === 0) throw new Error("stuck: no reachable nodes");
-    run = enterNode(run, options[Math.floor(pick() * options.length)]);
+    const nodeId = options[Math.floor(pick() * options.length)];
+    run = enterNode(run, nodeId);
+    log.push({ t: "node", id: nodeId });
     const node = currentNode(run)!;
     if (isBattleNode(node.kind)) {
-      const { state } = simulateBattle(createBattle(nodeBattleSetup(run)));
-      run = finishBattle(run, state).run;
+      let s = createBattle(nodeBattleSetup(run));
+      const actions: Action[] = [];
+      while (s.outcome === "ongoing") {
+        s = advance(s).state;
+        if (s.outcome !== "ongoing") break;
+        const a = chooseAutoAction(s);
+        if (getUnit(s, s.activeUid!).side === "ally") actions.push(a);
+        s = act(s, a).state;
+      }
+      log.push({ t: "battle", actions });
+      run = finishBattle(run, s).run;
       continue;
     }
     switch (node.kind) {
       case "rest":
-        run = hpRatio(run) < 0.7 || run.members.some((m) => m.hp <= 0) ? restHeal(run) : restTrain(run, 0);
+        if (hpRatio(run) < 0.7 || run.members.some((m) => m.hp <= 0)) {
+          run = restHeal(run);
+          log.push({ t: "rest_heal" });
+        } else {
+          run = restTrain(run, 0);
+          log.push({ t: "rest_train", i: 0 });
+        }
         break;
       case "shop": {
         const offers = shopOffers(run);
@@ -57,23 +81,34 @@ export function autoplayRun(seed: string, partyIds: string[]): RunState {
             (o.kind === "revive" && run.members.some((m) => m.hp <= 0)) ||
             o.kind === "relic" ||
             o.kind === "train";
-          if (want && run.gold >= o.price) run = buyOffer(run, i);
+          if (want && run.gold >= o.price) {
+            run = buyOffer(run, i);
+            log.push({ t: "buy", i });
+          }
         });
         run = leaveNode(run);
+        log.push({ t: "leave" });
         break;
       }
       case "recruit": {
         const c = recruitCandidates(run)[0];
-        run = c && run.members.length < PARTY_SIZE ? recruit(run, c.id) : leaveNode(run);
+        if (c && run.members.length < PARTY_SIZE) {
+          run = recruit(run, c.id);
+          log.push({ t: "recruit", id: c.id });
+        } else {
+          run = leaveNode(run);
+          log.push({ t: "leave" });
+        }
         break;
       }
       case "event": {
         const ev = nodeEvent(run);
         const idx = ev.choices.findIndex((c) => !c.requiresGold || run.gold >= c.requiresGold);
         run = chooseEventOption(run, idx);
+        log.push({ t: "event", i: idx });
         break;
       }
     }
   }
-  return run;
+  return { run, log };
 }

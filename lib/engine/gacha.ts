@@ -53,3 +53,15 @@ export function rollParty(seed: string, count = PARTY_SIZE): string[] {
   }
   return picked;
 }
+
+/** 소환 세션 시드에서 런 시드를 만든다 (서버 검증 시 같은 규칙으로 계산) */
+export function runSeedFor(summonSeed: string): string {
+  return `${summonSeed}|run`;
+}
+
+/** 소환 기록이 진짜인지 확인: 그 시드의 pulls번째 소환 결과와 파티가 같아야 함 */
+export function isValidSummon(summonSeed: string, pulls: number, party: string[]): boolean {
+  if (!Number.isInteger(pulls) || pulls < 1 || pulls > 1 + GACHA_RULES.rerolls) return false;
+  const expected = rollParty(`${summonSeed}-${pulls}`);
+  return expected.length === party.length && expected.every((id, i) => id === party[i]);
+}

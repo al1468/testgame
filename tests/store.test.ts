@@ -94,3 +94,44 @@ describe("게임 화면 흐름 (store)", () => {
     expect(g().notice).toBe("지금은 할 수 없습니다.");
   });
 });
+
+describe("화면에서 쌓인 기록 = 서버 재생 결과", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => {
+    if (g().auto) g().toggleAuto();
+    vi.useRealTimers();
+  });
+
+  it("소환 → 지도 행동 → 수동·자동 전투를 섞어 진행한 기록을 재생하면 같은 런 상태", async () => {
+    const { replayRun } = await import("@/lib/engine/replay");
+    const { isValidSummon } = await import("@/lib/engine/gacha");
+    g().openSummon();
+    g().pullParty();
+    g().pullParty();
+    g().startRun();
+    const meta = g().runMeta!;
+    expect(isValidSummon(meta.summonSeed, meta.pulls, meta.party)).toBe(true);
+
+    for (let step = 0; step < 6 && g().run!.status === "ongoing"; step++) {
+      const run = g().run!;
+      const node = run.map.nodes.find((n) => n.id === Run.reachableNodeIds(run)[0])!;
+      g().selectNode(node.id);
+      if (Run.isBattleNode(node.kind)) {
+        await runUntil(() => !g().busy);
+        // 첫 행동은 수동, 나머지는 자동
+        const b = g().battle!;
+        if (b.outcome === "ongoing") g().confirmSkill(b.units.find((u) => u.side === "enemy" && u.alive)!.uid);
+        await runUntil(() => !g().busy);
+        g().toggleAuto();
+        await runUntil(() => g().report !== null);
+        g().toggleAuto();
+        if (g().run!.status !== "ongoing") break;
+        g().backToMap();
+      } else if (node.kind === "rest") g().restHeal();
+      else if (node.kind === "event") g().chooseEvent(Run.nodeEvent(g().run!).choices.length - 1);
+      else g().leaveNode();
+    }
+    const replayed = replayRun(g().run!.seed, meta.party, g().runLog);
+    expect(replayed).toEqual(g().run);
+  });
+});
